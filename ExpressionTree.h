@@ -1,4 +1,4 @@
-﻿#ifndef IOSTREAM
+#ifndef IOSTREAM
 #include<iostream>
 #define IOSTREAM
 #endif
@@ -68,7 +68,7 @@ private:
 		}
 		R = stackNode.top();
 	}
-	double _getInsideTerm(string trigonometricFuntion, map<string, double> values)
+	double _getInsideTerm(string trigonometricFuntion, map<string, double>& values)
 	{
 		string insideTerm ;
 		for (int i = 0; i < trigonometricFuntion.size(); i++)
@@ -83,12 +83,18 @@ private:
 				break;
 			}
 		}
-		return values[insideTerm];
+		//TODO: get value of the expression which has been taken out.
+		ExpressionTree temp;
+		temp.setExpression(insideTerm);
+		double test = temp.getValue(values);
+		values[trigonometricFuntion] = test;
+		return test;
+		//return values[insideTerm];
 	}
-	double _getTrigonomometricValue(string term, map<string, double> values)
+	double _getTrigonomometricValue(string term, map<string, double>& values)
 	{
-		string specialWord[8] = { "sin", "cos", "tan", "cot", "arcSin", "arcCos", "arcTan", "arcCot" };
-		for (int i = 0; i < 8; i++)
+		string specialWord[9] = { "sin", "cos", "tan", "cot", "arcSin", "arcCos", "arcTan", "arcCot","sqrt"};
+		for (int i = 0; i < 9; i++)
 		{
 			int index = indexOfWord(specialWord[i], term, 0);
 			if (index != -1)
@@ -100,13 +106,14 @@ private:
 				if (i == 4) values[term] = asin(_getInsideTerm(term, values));
 				if (i == 5) values[term] = acos(_getInsideTerm(term, values));
 				if (i == 6) values[term] = atan(_getInsideTerm(term, values));
-				if (i == 7) values[term] = atan(1/_getInsideTerm(term, values)); //TODO: is this right?
+				if (i == 7) values[term] = atan(1/_getInsideTerm(term, values)); 
+				if (i == 8) values[term] = sqrt(_getInsideTerm(term, values));
 			    return values[term];
 			}
 		}
 		return values[term];
 	}
-	double _getValue(Node*&node, map<string, double> values)  //get value of the expression
+	double _getValue(Node*&node, map<string, double>& values)  //get value of the expression
 	{
 		if (node == NULL) return -99999999;  //error
 		string data = node->data; //data can be operands(a,b,c,...), or operator(+,-,*,/)
@@ -158,8 +165,8 @@ private:
 	};
 	vector<string> toPostfix(vector<string> A)
 	{
-		stack<string> opStack;       //stack dùng để chứa các toán tử ( ) + - * /
-		vector<string> result;//tạo một chuỗi trống, chuỗi này sẽ là chuỗi được trả về
+		stack<string> opStack;       //The stack is used for containing operators as ( ) + - * /
+		vector<string> result;//result under Postfix form 
 		for (int i = 0; i < A.size(); i++)
 		{
 			if (A[i] == "(")  //nếu là dấu mở ngoặc thì thêm vào stack 
@@ -168,7 +175,7 @@ private:
 			}
 			else
 			{
-				if (isOperand(A[i]))   //nếu là toán hạng a, b,c,d,e,f... thì thêm vào chuỗi result
+				if (isOperand(A[i]))   //if meet operands a, bb,ccsd,dd,eew,f... then add to the "result"
 				{
 					result.push_back(A[i]);
 				}
@@ -198,7 +205,7 @@ private:
 				}
 			}
 		}
-		while (!opStack.empty())   //trong stack còn bao nhiêu thì cứ thêm vào
+		while (!opStack.empty())   //take out ramining characters from stack and push back result
 		{
 			result.push_back(opStack.top());
 			opStack.pop();
@@ -236,16 +243,16 @@ public:
 	{
 		this->Root = NULL;
 	}
-	double getValue(map<string, double> values)
+	double getValue(map<string, double>& values)
 	{
 		return _getValue(this->Root,values);
 	}
 	void setExpression(string formula)
 	{
 		//first, add '_' character to preposition of "sin","cos",...
-		string specialWord[8] = { "sin", "cos", "tan", "cot", "arcSin", "arcCos", "arcTan", "arcCot" };
+		string specialWord[9] = { "sin", "cos", "tan", "cot", "arcSin", "arcCos", "arcTan", "arcCot","sqrt" };
 
-		for (int j = 0; j < 8; j++)
+		for (int j = 0; j < 9; j++)
 		{
 			string word = specialWord[j];
 			for (int i = 0; i < formula.size(); i++)
